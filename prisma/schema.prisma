@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String?
+  email         String?   @unique
+  passwordHash  String
+  role          Role      @default(CLIENT)
+  vehicles      Vehicle[]
+  repairs       Repair[]  @relation("TechnicianRepairs")
+  appointments  Appointment[]
+  rentalReservations RentalReservation[] @relation("UserRentals")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  TECHNICIAN
+  CLIENT
+}
+
+model Vehicle {
+  id           String    @id @default(uuid())
+  clientId     String
+  client       User      @relation(fields: [clientId], references: [id])
+  plate        String    @unique
+  brand        String
+  model        String
+  year         Int
+  repairs      Repair[]
+  appointments Appointment[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Repair {
+  id             String    @id @default(uuid())
+  vehicleId      String
+  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id])
+  technicianId   String?
+  technician     User?     @relation("TechnicianRepairs", fields: [technicianId], references: [id])
+  status         RepairStatus @default(EN_ESPERA)
+  priority       Priority  @default(MEDIA)
+  diagnosticNotes String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum RepairStatus {
+  EN_ESPERA
+  EN_PROCESO
+  ESPERANDO_REPUESTOS
+  LISTO_ENTREGA
+}
+
+enum Priority {
+  BAJA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+model Appointment {
+  id            String    @id @default(uuid())
+  clientId      String
+  client        User      @relation(fields: [clientId], references: [id])
+  vehicleId     String
+  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id])
+  scheduledDate DateTime
+  serviceType   String
+  status        AppointmentStatus @default(PROGRAMADA)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum AppointmentStatus {
+  PROGRAMADA
+  COMPLETADA
+  CANCELADA
+}
+
+// -------------------------------------------------------------
+// READY2DRIVESV RENTAL MODULE
+// -------------------------------------------------------------
+
+model RentalCar {
+  id              String         @id @default(uuid())
+  plate           String         @unique
+  brand           String
+  model           String
+  year            Int
+  vehicleClass    String         // e.g., "Platinum Class", "Economy"
+  imageUrl        String?
+  seats           Int            @default(4)
+  doors           Int            @default(4)
+  luggageCapacity Int            @default(2) // Number of bags
+  transmission    TransmissionType @default(AUTOMATIC)
+  fuelType        FuelType       @default(GASOLINE)
+  pricePerDay     Float
+  status          RentalStatus   @default(AVAILABLE)
+  reservations    RentalReservation[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum TransmissionType {
+  AUTOMATIC
+  MANUAL
+}
+
+enum FuelType {
+  GASOLINE
+  DIESEL
+  HYBRID
+  ELECTRIC
+}
+
+enum RentalStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  OUT_OF_SERVICE
+}
+
+model RentalReservation {
+  id              String         @id @default(uuid())
+  userId          String?        // Made optional if guest checkout is allowed
+  user            User?          @relation("UserRentals", fields: [userId], references: [id])
+  rentalCarId     String
+  rentalCar       RentalCar      @relation(fields: [rentalCarId], references: [id])
+  
+  pickupLocation  String
+  returnLocation  String
+  pickupDate      DateTime
+  returnDate      DateTime
+  rentersAgeCheck Boolean        @default(true) // e.g. "I am over 25 years old"
+  promoCode       String?
+  totalPrice      Float
+  status          ReservationStatus @default(PENDING)
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}

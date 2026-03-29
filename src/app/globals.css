@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  * {
+    @apply border-steel-200;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    @apply bg-navy-950 text-steel-100 font-sans antialiased;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent-500 hover:bg-accent-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98] text-base min-h-[48px];
+  }
+
+  .btn-secondary {
+    @apply bg-navy-600 hover:bg-navy-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 border border-steel-600 text-base min-h-[48px];
+  }
+
+  .btn-danger {
+    @apply bg-danger hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 text-base min-h-[48px];
+  }
+
+  .card {
+    @apply bg-navy-800 border border-steel-800 rounded-2xl p-6 shadow-xl;
+  }
+
+  .card-hover {
+    @apply card hover:border-accent-500/30 transition-all duration-300 cursor-pointer;
+  }
+
+  .input-field {
+    @apply w-full bg-navy-900 border border-steel-700 rounded-xl px-4 py-3 text-steel-100 placeholder:text-steel-500 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-transparent transition-all duration-200 text-base min-h-[48px];
+  }
+
+  .label-text {
+    @apply text-sm font-medium text-steel-300 mb-1.5 block;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-success {
+    @apply badge bg-green-500/20 text-green-400;
+  }
+
+  .badge-warning {
+    @apply badge bg-yellow-500/20 text-yellow-400;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-500/20 text-red-400;
+  }
+
+  .badge-info {
+    @apply badge bg-blue-500/20 text-blue-400;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-steel-400 hover:text-white hover:bg-navy-700 transition-all duration-200 font-medium min-h-[48px];
+  }
+
+  .sidebar-link-active {
+    @apply sidebar-link text-white bg-accent-500/10 border-l-4 border-accent-500;
+  }
+
+  .stat-card {
+    @apply card flex flex-col gap-2;
+  }
+
+  .table-header {
+    @apply text-left text-sm font-semibold text-steel-400 uppercase tracking-wider py-3 px-4;
+  }
+
+  .table-cell {
+    @apply py-4 px-4 text-steel-200 border-b border-steel-800;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-steel-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-steel-600;
+}
+
+/* Mobile optimizations for technician interface */
+@media (max-width: 768px) {
+  .tech-interface {
+    @apply text-lg;
+  }
+
+  .tech-interface .btn-primary,
+  .tech-interface .btn-secondary {
+    @apply min-h-[56px] text-lg;
+  }
+
+  .tech-interface .input-field {
+    @apply min-h-[56px] text-lg;
+  }
+}
