@@ -14,6 +14,19 @@ import os
 # Cargar variables locales
 load_dotenv(".env.local")
 
+# --- SISTEMA DE ACTIVACIÓN (PARA EVITAR CONFLICTOS EN RAILWAY) ---
+SERVICE_NAME = os.getenv("RAILWAY_SERVICE_NAME", "Local/Desconocido")
+ACTIVATE_BOT = os.getenv("ACTIVATE_BOT", "false").lower() == "true"
+
+if not ACTIVATE_BOT:
+    print(f"⚠️  Servicio detectado: {SERVICE_NAME}")
+    print("▶️  El bot está DESACTIVADO (ACTIVATE_BOT != 'true').")
+    print("💡 Para activarlo en este servicio, añade ACTIVATE_BOT=true en Railway.")
+    import time
+    while True:
+        time.sleep(3600)
+# ----------------------------------------------------------------
+
 # Chat ID del dueño (Respaldo)
 TU_CHAT_ID_DEFAULT = 5913494789
 
@@ -218,7 +231,7 @@ Responde en JSON exacto, sin markdown, sin explicaciones extra:
 """
 
     respuesta = client.models.generate_content(
-        model="gemini-2.5-flash-lite",
+        model="gemini-2.0-flash-lite",
         contents=[
             types.Part.from_bytes(data=bytes(imagen_bytes), mime_type="image/jpeg"),
             types.Part.from_text(text=prompt)
