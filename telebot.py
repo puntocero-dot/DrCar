@@ -239,11 +239,18 @@ Responde en JSON exacto, sin markdown, sin explicaciones extra:
         await update.message.reply_text(f"💬 {respuesta.text[:3000]}")
 
 if TOKEN and client:
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(MessageHandler(filters.PHOTO, handle_imagen))
-    app.add_handler(MessageHandler(filters.TEXT, handle_texto))
-    print("🤖 Agente IA corriendo con visión, edición de archivos y Railway...")
-    app.run_polling()
+    try:
+        app = ApplicationBuilder().token(TOKEN).build()
+        app.add_handler(MessageHandler(filters.PHOTO, handle_imagen))
+        app.add_handler(MessageHandler(filters.TEXT, handle_texto))
+        print("🤖 Agente IA corriendo con visión, edición de archivos y Railway...")
+        app.run_polling()
+    except Exception as e:
+        print(f"❌ ERROR CRÍTICO al iniciar el bot: {e}")
+        import time
+        while True:
+            print(f"El bot falló al iniciar. Error: {e}. Esperando corrección en Railway...")
+            time.sleep(60)
 else:
     print("❌ ERROR CRÍTICO: El bot NO puede iniciar sin TELEGRAM_TOKEN y GEMINI_API_KEY.")
     import time
