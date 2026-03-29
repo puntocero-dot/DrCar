@@ -30,7 +30,14 @@ except ValueError:
     print(f"❌ ERROR: TELEGRAM_CHAT_ID debe ser un número, se recibió: {TU_CHAT_ID_ENV}")
     TU_CHAT_ID = 0
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+# Initialize clients only if keys are present
+client = None
+
+if GEMINI_API_KEY:
+    client = genai.Client(api_key=GEMINI_API_KEY)
+else:
+    print("⚠️ WARNING: Gemini Client no inicializado debido a falta de API KEY")
+
 PROJECT_DIR = "."
 
 def obtener_url_railway():
@@ -231,8 +238,15 @@ Responde en JSON exacto, sin markdown, sin explicaciones extra:
     except Exception as e:
         await update.message.reply_text(f"💬 {respuesta.text[:3000]}")
 
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(MessageHandler(filters.PHOTO, handle_imagen))
-app.add_handler(MessageHandler(filters.TEXT, handle_texto))
-print("🤖 Agente IA corriendo con visión, edición de archivos y Railway...")
-app.run_polling()
+if TOKEN and client:
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(MessageHandler(filters.PHOTO, handle_imagen))
+    app.add_handler(MessageHandler(filters.TEXT, handle_texto))
+    print("🤖 Agente IA corriendo con visión, edición de archivos y Railway...")
+    app.run_polling()
+else:
+    print("❌ ERROR CRÍTICO: El bot NO puede iniciar sin TELEGRAM_TOKEN y GEMINI_API_KEY.")
+    import time
+    while True:
+        print("Esperando configuración de variables de entorno en Railway...")
+        time.sleep(60)
