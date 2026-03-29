@@ -7,8 +7,15 @@ from google import genai
 from google.genai import types
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
+from dotenv import load_dotenv
 
 import os
+
+# Cargar variables locales
+load_dotenv(".env.local")
+
+# Chat ID del dueño (Respaldo)
+TU_CHAT_ID_DEFAULT = 5913494789
 
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 TU_CHAT_ID_ENV = os.environ.get("TELEGRAM_CHAT_ID")
@@ -16,19 +23,23 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 RAILWAY_TOKEN = os.environ.get("RAILWAY_TOKEN")
 RAILWAY_PROJECT_ID = os.environ.get("RAILWAY_PROJECT_ID")
 
+# Determinar el Chat ID efectivo
+try:
+    if TU_CHAT_ID_ENV:
+        TU_CHAT_ID = int(TU_CHAT_ID_ENV)
+    else:
+        TU_CHAT_ID = TU_CHAT_ID_DEFAULT
+except ValueError:
+    print(f"❌ ERROR: TELEGRAM_CHAT_ID inválido en entorno, usando respaldo.")
+    TU_CHAT_ID = TU_CHAT_ID_DEFAULT
+
 # Safety check for environment variables
 if not TOKEN:
     print("❌ ERROR: TELEGRAM_TOKEN no configurado en entorno.")
-if not TU_CHAT_ID_ENV:
-    print("❌ ERROR: TELEGRAM_CHAT_ID no configurado en entorno.")
+if TU_CHAT_ID == 0:
+    print("❌ ERROR: TELEGRAM_CHAT_ID no configurado.")
 if not GEMINI_API_KEY:
     print("❌ ERROR: GEMINI_API_KEY no configurado en entorno.")
-
-try:
-    TU_CHAT_ID = int(TU_CHAT_ID_ENV) if TU_CHAT_ID_ENV else 0
-except ValueError:
-    print(f"❌ ERROR: TELEGRAM_CHAT_ID debe ser un número, se recibió: {TU_CHAT_ID_ENV}")
-    TU_CHAT_ID = 0
 
 # Initialize clients only if keys are present
 client = None
