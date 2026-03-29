@@ -153,7 +153,7 @@ Responde en este formato JSON exacto, sin markdown, sin explicaciones extra:
 """
 
     respuesta = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.0-flash-lite",
         contents=prompt
     )
 
