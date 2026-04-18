@@ -7,9 +7,34 @@ const isSupabaseConfigured = () => {
   return url && url.startsWith('http') && !url.includes('your_supabase')
 }
 
+function applySecurityHeaders(res: NextResponse): NextResponse {
+  res.headers.set('X-Frame-Options', 'DENY')
+  res.headers.set('X-Content-Type-Options', 'nosniff')
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.headers.set('X-XSS-Protection', '1; mode=block')
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  res.headers.set(
+    'Strict-Transport-Security',
+    'max-age=31536000; includeSubDomains'
+  )
+  res.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: blob: https://images.unsplash.com https://upload.wikimedia.org https://api.qrserver.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "frame-ancestors 'none'",
+    ].join('; ')
+  )
+  return res
+}
+
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone()
-  const res = NextResponse.next()
+  const res = applySecurityHeaders(NextResponse.next())
   const host = req.headers.get('host') || ''
   const pathname = url.pathname
 
@@ -21,7 +46,7 @@ export async function middleware(req: NextRequest) {
   if (isRentalSubdomain) {
     if (!pathname.startsWith('/ready2drivesv') && !pathname.startsWith('/_next') && !pathname.startsWith('/api')) {
       url.pathname = `/ready2drivesv${pathname === '/' ? '' : pathname}`
-      return NextResponse.rewrite(url)
+      return applySecurityHeaders(NextResponse.rewrite(url))
     }
   }
 
@@ -69,6 +94,14 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL(`/dashboard/${rolePath}`, req.url))
       }
     }
+    return res
+  }
+
+  // Public routes — explicitly bypass auth for paint-visualizer
+  if (
+    pathname.startsWith('/paint-visualizer') &&
+    !pathname.startsWith('/paint-visualizer/configure')
+  ) {
     return res
   }
 

@@ -184,6 +184,52 @@ export interface RentalReservation {
   updated_at: string
 }
 
+// =========================================================
+// Paint Visualizer Types
+// =========================================================
+
+export type PaintSessionStatus = 'active' | 'completed' | 'archived'
+export type CarBodyType = 'sedan' | 'suv' | 'hatchback' | 'pickup' | 'coupe' | 'van' | 'crossover'
+export type PaintFinish = 'solid' | 'metallic' | 'pearl' | 'matte'
+
+export interface PartPaintConfig {
+  color: string        // hex
+  finish: PaintFinish
+  metalness?: number   // 0-1
+  roughness?: number   // 0-1
+  clearcoat?: number   // 0-1
+}
+
+export interface PaintConfig {
+  body?: PartPaintConfig
+  doors?: PartPaintConfig
+  roof?: PartPaintConfig
+  wheels?: PartPaintConfig
+  bumper_front?: PartPaintConfig
+  bumper_rear?: PartPaintConfig
+}
+
+export interface PaintSession {
+  id: string
+  repair_id: string | null
+  client_email: string
+  client_name: string
+  client_phone: string | null
+  access_token: string
+  status: PaintSessionStatus
+  car_make: string | null
+  car_model: string | null
+  car_year: number | null
+  car_body_type: CarBodyType | null
+  car_color_hex: string | null
+  glb_model_path: string | null
+  paint_config: PaintConfig
+  created_at: string
+  updated_at: string
+  expires_at: string
+  created_by: string | null
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -226,6 +272,15 @@ export interface Database {
         Row: RentalReservation
         Insert: Omit<RentalReservation, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<RentalReservation>
+      }
+      paint_sessions: {
+        Row: PaintSession
+        Insert: Omit<PaintSession, 'id' | 'access_token' | 'created_at' | 'updated_at' | 'expires_at'> & {
+          status?: PaintSessionStatus
+          paint_config?: PaintConfig
+        }
+        Update: Partial<Omit<PaintSession, 'id' | 'access_token' | 'created_at'>>
+        Relationships: never[]
       }
     }
   }
