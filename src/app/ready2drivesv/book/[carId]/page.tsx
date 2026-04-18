@@ -96,7 +96,7 @@ export default function BookingPage() {
       router.push(`/ready2drivesv/checkout/${(data as any).id}`);
     } catch (err: any) {
       console.error("Booking failed:", err);
-      alert("Error al procesar la reserva. Por favor intenta de nuevo.");
+      setError("Error al procesar la reserva. Por favor intenta de nuevo.");
     } finally {
       setBookingLoading(false);
     }

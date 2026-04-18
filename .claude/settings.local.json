@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npx next:*)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('telebot.py'\\).read\\(\\)\\); print\\('Syntax OK'\\)\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\DELL\\\\Desktop\\\\Proyectos\\\\Drive2go\\\\src\\\\app\\\\paint-visualizer\\\\s\\\\[token]\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\DELL\\\\Desktop\\\\Proyectos\\\\Drive2go\\\\src\\\\app\\\\paint-visualizer\\\\configure\\\\[sessionId]\")",
+      "Bash(curl -L --insecure -o \"/c/Users/DELL/Desktop/Proyectos/Drive2go/public/models/cars/ferrari.glb\" \"https://threejs.org/examples/models/gltf/ferrari.glb\")",
+      "Bash(curl -L --insecure -o \"/c/Users/DELL/Desktop/Proyectos/Drive2go/public/hdri/venice_sunset_1k.hdr\" \"https://threejs.org/examples/textures/equirectangular/venice_sunset_1k.hdr\")",
+      "Bash(npx tsc *)",
+      "Bash(node -e ' *)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(git -C /c/Users/DELL/Desktop/Proyectos/Drive2go diff --stat HEAD)",
+      "Bash(git -C /c/Users/DELL/Desktop/Proyectos/Drive2go status --short)",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'feat: Paint Visualizer — Taller de Pintura 3D \\(Phases 1-4\\)' --base main --head feature/paint-visualizer --body ' *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

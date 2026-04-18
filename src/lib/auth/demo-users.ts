@@ -44,11 +44,15 @@ export const DEMO_USERS: DemoUser[] = [
   },
 ]
 
+const DEMO_MODE_ENABLED = process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+
 export function authenticateDemo(email: string, password: string): DemoUser | null {
+  if (!DEMO_MODE_ENABLED) return null
   return DEMO_USERS.find((u) => u.email === email && u.password === password) || null
 }
 
 export function getDemoUser(): DemoUser | null {
+  if (!DEMO_MODE_ENABLED) return null
   if (typeof window === 'undefined') return null
   const stored = localStorage.getItem('demo_user')
   if (!stored) return null
@@ -60,6 +64,7 @@ export function getDemoUser(): DemoUser | null {
 }
 
 export function setDemoUser(user: DemoUser): void {
+  if (!DEMO_MODE_ENABLED) return
   localStorage.setItem('demo_user', JSON.stringify(user))
 }
 

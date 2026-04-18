@@ -4,15 +4,17 @@ interface CardProps {
   children: React.ReactNode
   className?: string
   variant?: 'default' | 'outline' | 'glass'
+  onClick?: () => void
 }
 
-export function Card({ 
-  children, 
-  className = '', 
-  variant = 'default' 
+export function Card({
+  children,
+  className = '',
+  variant = 'default',
+  onClick
 }: CardProps) {
   const baseStyles = 'rounded-2xl overflow-hidden transition-all'
-  
+
   const variants = {
     default: 'bg-navy-900/50 border border-steel-800 shadow-xl',
     outline: 'bg-transparent border border-steel-800 hover:border-accent-500/50',
@@ -20,7 +22,7 @@ export function Card({
   }
 
   return (
-    <div className={`${baseStyles} ${variants[variant]} ${className}`}>
+    <div className={`${baseStyles} ${variants[variant]} ${className}`} onClick={onClick}>
       {children}
     </div>
   )

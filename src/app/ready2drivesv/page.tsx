@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { BookingForm } from "@/components/ready2drivesv/BookingForm";
 import { CarCatalog } from "@/components/ready2drivesv/CarCatalog";
 
@@ -40,7 +41,9 @@ export default function Ready2DrivePage() {
 
       {/* Booking Form Overlapping Hero */}
       <section className="relative z-20">
-        <BookingForm />
+        <Suspense fallback={null}>
+          <BookingForm />
+        </Suspense>
       </section>
 
       {/* Catalog Section */}
@@ -49,7 +52,9 @@ export default function Ready2DrivePage() {
           <h2 className="text-4xl font-bold text-white mb-4">Nuestra Flota Premium</h2>
           <p className="text-zinc-400">Selecciona el vehículo perfecto para tu viaje</p>
         </div>
-        <CarCatalog />
+        <Suspense fallback={null}>
+          <CarCatalog />
+        </Suspense>
       </section>
 
     </div>

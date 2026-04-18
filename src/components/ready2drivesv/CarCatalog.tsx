@@ -61,7 +61,7 @@ export function CarCatalog() {
       // If missing dates, ask user to fill the form first
       const form = document.getElementById('hero-section'); // or search form
       if (form) form.scrollIntoView({ behavior: 'smooth' });
-      alert("Por favor, selecciona las fechas y lugar de retiro antes de continuar.");
+      setError("Por favor, selecciona las fechas y lugar de retiro antes de continuar.");
       return;
     }
 
@@ -84,7 +84,7 @@ export function CarCatalog() {
         <p className="text-red-400 font-bold mb-2">Ops! Algo salió mal</p>
         <p className="text-zinc-400">{error}</p>
         <button 
-          onClick={() => window.location.reload()}
+          onClick={() => setError(null)}
           className="mt-6 px-6 py-2 bg-red-500 text-white rounded-xl font-bold hover:bg-red-400 transition-all"
         >
           Reintentar
