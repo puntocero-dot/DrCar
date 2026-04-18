@@ -4,7 +4,7 @@
 
 CREATE TABLE IF NOT EXISTS paint_sessions (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  repair_id       uuid REFERENCES reparaciones(id) ON DELETE SET NULL,
+  repair_id       uuid,  -- nullable FK to reparaciones(id), enforced at app level
   client_email    text NOT NULL,
   client_name     text NOT NULL,
   client_phone    text,
