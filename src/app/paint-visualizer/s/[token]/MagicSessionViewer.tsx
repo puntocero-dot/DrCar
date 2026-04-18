@@ -2,9 +2,10 @@
 
 import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { Paintbrush, RotateCcw } from 'lucide-react'
+import { Paintbrush, RotateCcw, Share2 } from 'lucide-react'
 import PartSelector from '@/components/paint-visualizer/PartSelector'
 import ColorPanel from '@/components/paint-visualizer/ColorPanel'
+import ShareModal from '@/components/paint-visualizer/ShareModal'
 import type { PaintConfig, PaintFinish } from '@/lib/types/database'
 import type { PaintablePart } from '@/lib/paint/ferrari-parts'
 import { DEFAULT_PART_CONFIGS } from '@/lib/paint/ferrari-parts'
@@ -47,6 +48,7 @@ export default function MagicSessionViewer({
   const merged: PaintConfig = { ...INITIAL_CONFIG, ...initialPaintConfig }
   const [paintConfig, setPaintConfig] = useState<PaintConfig>(merged)
   const [selectedPart, setSelectedPart] = useState<PaintablePart>('body')
+  const [showShareModal, setShowShareModal] = useState(false)
 
   const { isSaving } = usePaintSessionSync(sessionId, accessToken, paintConfig)
 
@@ -89,13 +91,20 @@ export default function MagicSessionViewer({
             Guardando…
           </span>
         )}
-        <div className="ml-auto">
+        <div className="ml-auto flex gap-2">
           <button
             onClick={handleReset}
             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-800 hover:border-gray-700 rounded-lg px-3 py-1.5 transition-colors"
           >
             <RotateCcw className="w-3 h-3" />
             Reset
+          </button>
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="flex items-center gap-1.5 text-xs text-gray-950 bg-yellow-400 hover:bg-yellow-300 rounded-lg px-3 py-1.5 font-medium transition-colors"
+          >
+            <Share2 className="w-3 h-3" />
+            Compartir
           </button>
         </div>
       </header>
@@ -144,6 +153,14 @@ export default function MagicSessionViewer({
           </div>
         </aside>
       </div>
+
+      {showShareModal && (
+        <ShareModal
+          sessionId={sessionId}
+          accessToken={accessToken}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   )
 }

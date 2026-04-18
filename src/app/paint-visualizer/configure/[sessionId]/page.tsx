@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { Paintbrush, RotateCcw, Share2 } from 'lucide-react'
 import PartSelector from '@/components/paint-visualizer/PartSelector'
 import ColorPanel from '@/components/paint-visualizer/ColorPanel'
+import ShareModal from '@/components/paint-visualizer/ShareModal'
 import type { PaintConfig, PaintFinish } from '@/lib/types/database'
 import type { PaintablePart } from '@/lib/paint/ferrari-parts'
 import { DEFAULT_PART_CONFIGS } from '@/lib/paint/ferrari-parts'
@@ -34,6 +35,9 @@ const INITIAL_CONFIG: PaintConfig = {
 export default function ConfigurePage({ params }: { params: { sessionId: string } }) {
   const [paintConfig, setPaintConfig] = useState<PaintConfig>(INITIAL_CONFIG)
   const [selectedPart, setSelectedPart] = useState<PaintablePart>('body')
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [sessionAccessToken, setSessionAccessToken] = useState<string | null>(null)
+  const [isFetchingToken, setIsFetchingToken] = useState(false)
 
   // No accessToken in staff flow → hook will skip saving
   const { isSaving } = usePaintSessionSync(params.sessionId, null, paintConfig)
@@ -55,6 +59,32 @@ export default function ConfigurePage({ params }: { params: { sessionId: string 
   }, [selectedPart])
 
   const handleReset = () => setPaintConfig(INITIAL_CONFIG)
+
+  const handleShare = async () => {
+    if (sessionAccessToken) {
+      setShowShareModal(true)
+      return
+    }
+    setIsFetchingToken(true)
+    try {
+      const res = await fetch(`/api/paint-visualizer/send-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: params.sessionId }),
+      })
+      if (res.ok) {
+        const data = (await res.json()) as { link: string; access_token?: string }
+        // Extract token from link path: /paint-visualizer/s/<token>
+        const parts = data.link.split('/paint-visualizer/s/')
+        if (parts[1]) {
+          setSessionAccessToken(parts[1])
+          setShowShareModal(true)
+        }
+      }
+    } finally {
+      setIsFetchingToken(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
@@ -79,9 +109,13 @@ export default function ConfigurePage({ params }: { params: { sessionId: string 
             <RotateCcw className="w-3 h-3" />
             Reset
           </button>
-          <button className="flex items-center gap-1.5 text-xs text-gray-950 bg-yellow-400 hover:bg-yellow-300 rounded-lg px-3 py-1.5 font-medium transition-colors">
+          <button
+            onClick={handleShare}
+            disabled={isFetchingToken}
+            className="flex items-center gap-1.5 text-xs text-gray-950 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-60 rounded-lg px-3 py-1.5 font-medium transition-colors"
+          >
             <Share2 className="w-3 h-3" />
-            Compartir
+            {isFetchingToken ? 'Obteniendo…' : 'Compartir'}
           </button>
         </div>
       </header>
@@ -127,6 +161,14 @@ export default function ConfigurePage({ params }: { params: { sessionId: string 
           </div>
         </aside>
       </div>
+
+      {showShareModal && sessionAccessToken && (
+        <ShareModal
+          sessionId={params.sessionId}
+          accessToken={sessionAccessToken}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </div>
   )
 }
