@@ -25,7 +25,7 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https://images.unsplash.com https://upload.wikimedia.org https://api.qrserver.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co blob:",
       "worker-src blob: 'self'",
       "frame-src 'none'",
       "frame-ancestors 'none'",

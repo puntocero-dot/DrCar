@@ -8,10 +8,18 @@ import {
   Environment,
   ContactShadows,
 } from '@react-three/drei'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import * as THREE from 'three'
 import type { PaintConfig } from '@/lib/types/database'
 import { FERRARI_PART_MAP } from '@/lib/paint/ferrari-parts'
 import { createCarMaterial } from '@/lib/paint/material-utils'
+
+// Point Draco decoder to local files (avoids CSP issues with gstatic.com)
+const dracoLoader = new DRACOLoader()
+dracoLoader.setDecoderPath('/draco/')
+
+useGLTF.setDecoderPath('/draco/')
 
 interface CarModelProps {
   paintConfig: PaintConfig
@@ -33,9 +41,8 @@ function CarModel({ paintConfig, selectedPart }: CarModelProps) {
 
       const mat = createCarMaterial(config)
 
-      // Highlight selected part
       if (partGroup === selectedPart) {
-        mat.emissive = new THREE.Color('#facc15') // yellow-400
+        mat.emissive = new THREE.Color('#facc15')
         mat.emissiveIntensity = 0.08
       }
 
@@ -67,17 +74,22 @@ export default function CarViewer({ paintConfig, selectedPart, className = '' }:
     <div className={`w-full h-full bg-gray-900 rounded-2xl overflow-hidden ${className}`}>
       <Canvas
         camera={{ position: [4, 2, 6], fov: 45 }}
-        dpr={[1, 2]}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.0 }}
+        dpr={[1, 1.5]}
+        gl={{
+          antialias: true,
+          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMappingExposure: 1.0,
+        }}
         shadows
       >
-        <ambientLight intensity={0.3} />
-        <directionalLight position={[5, 8, 5]} intensity={1.5} castShadow shadow-mapSize={2048} />
+        <ambientLight intensity={0.4} />
+        <directionalLight position={[5, 8, 5]} intensity={1.5} castShadow />
         <directionalLight position={[-5, 5, -5]} intensity={0.5} color="#aaccff" />
         <pointLight position={[0, 3, 0]} intensity={0.5} color="#ffffee" />
 
         <Suspense fallback={<LoadingFallback />}>
-          <Environment preset="city" background={false} />
+          {/* Use local HDR file — avoids fetching from Google Storage CDN */}
+          <Environment files="/hdri/venice_sunset_1k.hdr" background={false} />
           <CarModel paintConfig={paintConfig} selectedPart={selectedPart} />
           <ContactShadows
             position={[0, -0.95, 0]}
