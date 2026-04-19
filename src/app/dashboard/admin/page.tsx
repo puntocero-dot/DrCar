@@ -169,13 +169,12 @@ export default function AdminDashboard() {
                   <Paintbrush className="w-3.5 h-3.5" />
                   Nueva sesión
                 </a>
-                <button
-                  disabled
-                  title="Próximamente"
-                  className="flex items-center gap-1.5 text-sm font-medium border border-navy-700 text-steel-500 rounded-lg px-4 py-2 cursor-not-allowed opacity-50"
+                <a
+                  href="/dashboard/paint-sessions"
+                  className="flex items-center gap-1.5 text-sm font-medium border border-navy-700 text-steel-400 hover:text-white hover:border-steel-600 rounded-lg px-4 py-2 transition-colors"
                 >
                   Ver todas las sesiones
-                </button>
+                </a>
               </div>
             </div>
           </div>
