@@ -5,14 +5,19 @@ import { PAINTABLE_PARTS, PART_LABELS, PART_ICONS, type PaintablePart } from '@/
 interface PartSelectorProps {
   selectedPart: PaintablePart | null
   onSelect: (part: PaintablePart) => void
+  parts?: readonly PaintablePart[]
 }
 
-export default function PartSelector({ selectedPart, onSelect }: PartSelectorProps) {
+export default function PartSelector({
+  selectedPart,
+  onSelect,
+  parts = PAINTABLE_PARTS,
+}: PartSelectorProps) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Seleccionar parte</p>
       <div className="flex flex-wrap gap-2">
-        {PAINTABLE_PARTS.map((part) => (
+        {parts.map((part) => (
           <button
             key={part}
             onClick={() => onSelect(part)}

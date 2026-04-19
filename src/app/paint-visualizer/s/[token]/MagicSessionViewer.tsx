@@ -6,9 +6,11 @@ import { Paintbrush, RotateCcw, Share2 } from 'lucide-react'
 import PartSelector from '@/components/paint-visualizer/PartSelector'
 import ColorPanel from '@/components/paint-visualizer/ColorPanel'
 import ShareModal from '@/components/paint-visualizer/ShareModal'
+import ModelSelector from '@/components/paint-visualizer/ModelSelector'
 import type { PaintConfig, PaintFinish } from '@/lib/types/database'
 import type { PaintablePart } from '@/lib/paint/ferrari-parts'
 import { DEFAULT_PART_CONFIGS } from '@/lib/paint/ferrari-parts'
+import { DEFAULT_CAR_ID, getCarById } from '@/lib/paint/car-catalog'
 import { usePaintSessionSync } from '@/hooks/usePaintSessionSync'
 
 const CarViewer = dynamic(() => import('@/components/paint-visualizer/CarViewer'), {
@@ -48,6 +50,9 @@ export default function MagicSessionViewer({
   const [paintConfig, setPaintConfig] = useState<PaintConfig>(merged)
   const [selectedPart, setSelectedPart] = useState<PaintablePart>('body')
   const [showShareModal, setShowShareModal] = useState(false)
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_CAR_ID)
+
+  const currentCar = getCarById(selectedModelId)!
 
   const { isSaving } = usePaintSessionSync(sessionId, accessToken, paintConfig)
 
@@ -112,13 +117,20 @@ export default function MagicSessionViewer({
       <div className="flex-1 flex overflow-hidden">
         {/* 3D Viewer */}
         <div className="flex-1 p-4">
-          <CarViewer paintConfig={paintConfig} selectedPart={selectedPart} className="h-full" />
+          <CarViewer paintConfig={paintConfig} selectedPart={selectedPart} carModelId={selectedModelId} className="h-full" />
         </div>
 
         {/* Controls panel */}
         <aside className="w-80 border-l border-gray-800 bg-gray-950 flex flex-col overflow-y-auto">
           <div className="p-4 space-y-6">
-            <PartSelector selectedPart={selectedPart} onSelect={setSelectedPart} />
+            <ModelSelector selectedModelId={selectedModelId} onSelect={setSelectedModelId} />
+            <div className="border-t border-gray-800 pt-4">
+              <PartSelector
+                selectedPart={selectedPart}
+                onSelect={setSelectedPart}
+                parts={currentCar.paintableParts}
+              />
+            </div>
             <div className="border-t border-gray-800 pt-4">
               <ColorPanel
                 selectedColor={currentPartConfig.color}

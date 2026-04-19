@@ -5,26 +5,39 @@ import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Environment, ContactShadows } from '@react-three/drei'
 import * as THREE from 'three'
 import type { PaintConfig } from '@/lib/types/database'
-import { FERRARI_PART_MAP } from '@/lib/paint/ferrari-parts'
+import type { CarModel } from '@/lib/paint/car-catalog'
+import { CAR_CATALOG, DEFAULT_CAR_ID, getCarById } from '@/lib/paint/car-catalog'
 import { finishToMaterialProps } from '@/lib/paint/material-utils'
 
 useGLTF.setDecoderPath('/draco/')
+// Preload all catalogue models up-front
+CAR_CATALOG.forEach((car) => useGLTF.preload(car.path))
 
-function CarModel({ paintConfig, selectedPart }: { paintConfig: PaintConfig; selectedPart: string | null }) {
-  const { scene } = useGLTF('/models/cars/ferrari.glb')
-  // Cache materials so we mutate instead of recreate
+function CarModelMesh({
+  car,
+  paintConfig,
+  selectedPart,
+}: {
+  car: CarModel
+  paintConfig: PaintConfig
+  selectedPart: string | null
+}) {
+  const { scene } = useGLTF(car.path)
   const matCache = useRef<Map<string, THREE.MeshPhysicalMaterial>>(new Map())
+
+  useEffect(() => {
+    matCache.current.clear()
+  }, [car.path])
 
   useEffect(() => {
     scene.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
-      const partGroup = FERRARI_PART_MAP[child.name]
+      const partGroup = car.partMap[child.name]
       if (!partGroup) return
 
       const config = paintConfig[partGroup as keyof PaintConfig]
       if (!config) return
 
-      // Reuse cached material or create once
       let mat = matCache.current.get(child.name)
       if (!mat) {
         mat = new THREE.MeshPhysicalMaterial()
@@ -32,23 +45,20 @@ function CarModel({ paintConfig, selectedPart }: { paintConfig: PaintConfig; sel
         child.material = mat
       }
 
-      // Mutate in-place — no GC pressure, instant update
       mat.color.set(config.color)
       const props = finishToMaterialProps(config.finish)
-      mat.metalness   = config.metalness  ?? props.metalness  ?? 0.5
-      mat.roughness   = config.roughness  ?? props.roughness  ?? 0.3
-      mat.clearcoat   = config.clearcoat  ?? props.clearcoat  ?? 0.5
-      mat.clearcoatRoughness = (props.clearcoatRoughness ?? 0.1)
+      mat.metalness          = config.metalness ?? props.metalness  ?? 0.5
+      mat.roughness          = config.roughness  ?? props.roughness  ?? 0.3
+      mat.clearcoat          = config.clearcoat  ?? props.clearcoat  ?? 0.5
+      mat.clearcoatRoughness = props.clearcoatRoughness ?? 0.1
 
-      // Highlight selected part with subtle yellow rim
       mat.emissive.set(partGroup === selectedPart ? '#facc15' : '#000000')
       mat.emissiveIntensity = partGroup === selectedPart ? 0.06 : 0
-
       mat.needsUpdate = true
     })
-  }, [scene, paintConfig, selectedPart])
+  }, [scene, paintConfig, selectedPart, car])
 
-  return <primitive object={scene} scale={1.2} position={[0, -0.5, 0]} />
+  return <primitive object={scene} scale={car.scale} position={car.position} />
 }
 
 function Spinner() {
@@ -63,10 +73,18 @@ function Spinner() {
 interface CarViewerProps {
   paintConfig: PaintConfig
   selectedPart: string | null
+  carModelId?: string
   className?: string
 }
 
-export default function CarViewer({ paintConfig, selectedPart, className = '' }: CarViewerProps) {
+export default function CarViewer({
+  paintConfig,
+  selectedPart,
+  carModelId = DEFAULT_CAR_ID,
+  className = '',
+}: CarViewerProps) {
+  const car = getCarById(carModelId) ?? getCarById(DEFAULT_CAR_ID)!
+
   return (
     <div className={`w-full h-full bg-gray-900 rounded-2xl overflow-hidden ${className}`}>
       <Canvas
@@ -82,7 +100,7 @@ export default function CarViewer({ paintConfig, selectedPart, className = '' }:
 
         <Suspense fallback={<Spinner />}>
           <Environment files="/hdri/venice_sunset_1k.hdr" background={false} />
-          <CarModel paintConfig={paintConfig} selectedPart={selectedPart} />
+          <CarModelMesh car={car} paintConfig={paintConfig} selectedPart={selectedPart} />
           <ContactShadows position={[0, -0.95, 0]} opacity={0.5} scale={12} blur={2} far={3} />
         </Suspense>
 
@@ -99,5 +117,3 @@ export default function CarViewer({ paintConfig, selectedPart, className = '' }:
     </div>
   )
 }
-
-useGLTF.preload('/models/cars/ferrari.glb')
