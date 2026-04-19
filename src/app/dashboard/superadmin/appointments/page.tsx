@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 interface Appointment {
@@ -43,18 +45,24 @@ const statusConfig: Record<string, { label: string; class: string; icon: React.R
   cancelled: { label: 'Cancelada', class: 'bg-red-500/15 text-red-400 border-red-500/30', icon: <XCircle className="w-3.5 h-3.5" /> },
 }
 
+const PAGE_SIZE = 10
+
 export default function AppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>(DEMO_APPOINTMENTS)
   const [search, setSearch] = useState('')
   const [dateFilter, setDateFilter] = useState('2024-03-26')
   const [showModal, setShowModal] = useState(false)
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null)
+  const [page, setPage] = useState(0)
 
   const todayAppts = appointments.filter(a => a.date === dateFilter)
   const filtered = todayAppts.filter((a) =>
     a.client.toLowerCase().includes(search.toLowerCase()) ||
     a.vehicle.toLowerCase().includes(search.toLowerCase())
   )
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const handleSave = (apptData: Partial<Appointment>) => {
     if (selectedAppt) {
@@ -139,7 +147,7 @@ export default function AppointmentsPage() {
             <p className="text-steel-400">No hay citas para esta fecha</p>
           </div>
         ) : (
-          filtered.map((appt) => (
+          paginated.map((appt) => (
             <div key={appt.id} className="card p-5 hover:border-steel-700 transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 {/* Time */}
@@ -189,6 +197,30 @@ export default function AppointmentsPage() {
           ))
         )}
       </div>
+
+      {/* Pagination */}
+      {filtered.length > 0 && (
+        <div className="flex items-center justify-between px-2 py-4">
+          <p className="text-steel-500 text-sm">Mostrando {paginated.length} de {filtered.length} citas</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 0}
+              className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-steel-400 text-sm px-3 py-1">Página {page + 1} de {Math.max(totalPages, 1)}</span>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= totalPages - 1}
+              className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Appointment Modal */}
       {showModal && (

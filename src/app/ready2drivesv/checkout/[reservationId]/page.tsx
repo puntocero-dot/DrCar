@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { CreditCard, QrCode, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Ticket } from "lucide-react";
+import { CreditCard, QrCode, ShieldCheck, ArrowRight, Loader2, CheckCircle2, Ticket, Building2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { RentalReservation, RentalCar } from "@/lib/types/database";
 import { Button } from "@/components/ui/Button";
@@ -210,6 +210,43 @@ export default function CheckoutPage() {
                   <span className="text-3xl font-black italic text-emerald-400">${reservation?.total_price}</span>
                 </div>
 
+                {/* Sección de Pago */}
+                <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 space-y-4">
+                  <h3 className="text-white font-bold flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-emerald-400" />
+                    Método de Pago
+                  </h3>
+
+                  {/* Wompi badge */}
+                  <div className="flex items-center gap-3 p-4 bg-zinc-800/50 border border-emerald-500/20 rounded-xl">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-sm">W</div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium text-sm">Wompi — Pago en línea</p>
+                      <p className="text-zinc-500 text-xs">Tarjeta débito/crédito, PSE, Nequi</p>
+                    </div>
+                    <span className="text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-1 rounded-full">Próximamente</span>
+                  </div>
+
+                  {/* Transferencia manual como alternativa temporal */}
+                  <div className="flex items-center gap-3 p-4 bg-zinc-800/50 border border-zinc-700 rounded-xl cursor-pointer hover:border-emerald-500/30 transition-colors">
+                    <div className="w-10 h-10 rounded-lg bg-zinc-700 flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-zinc-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium text-sm">Transferencia bancaria</p>
+                      <p className="text-zinc-500 text-xs">Paga y envía comprobante por WhatsApp</p>
+                    </div>
+                    <div className="w-4 h-4 rounded-full border-2 border-emerald-400 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                    </div>
+                  </div>
+
+                  {/* Info temporal */}
+                  <p className="text-xs text-zinc-600 text-center">
+                    Integración Wompi en proceso. Por ahora confirma tu reserva y coordina el pago por WhatsApp.
+                  </p>
+                </div>
+
                 {paymentError && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-400 text-sm">
                     {paymentError}
@@ -223,7 +260,7 @@ export default function CheckoutPage() {
                   size="lg"
                   className="w-full h-16 text-xl shadow-emerald-500/25"
                 >
-                  {processing ? 'Procesando con el Banco...' : `Pagar con ${paymentMethod === 'card' ? 'Tarjeta' : 'QuickPay'}`}
+                  {processing ? 'Procesando con el Banco...' : 'Confirmar Reserva (Coordinar Pago)'}
                 </Button>
 
                 <div className="flex justify-center flex-wrap gap-4 opacity-30 grayscale hover:opacity-100 transition-all">

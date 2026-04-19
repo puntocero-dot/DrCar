@@ -18,6 +18,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { EvidenceUpload } from "@/components/dashboard/EvidenceUpload";
 
 const STATUS_COLORS: Record<string, string> = {
   en_espera: "bg-amber-500/10 text-amber-400 border-amber-500/20",
@@ -346,7 +347,7 @@ export default function TechnicianDashboard() {
                           </div>
                           <div className="flex items-center gap-2">
                             {task.requires_evidence && (
-                              <span title="Requiere evidencia"><Camera className="w-4 h-4 text-steel-500" /></span>
+                              <span title="Requiere evidencia"><Camera className="w-4 h-4 text-accent-400" /></span>
                             )}
                             <span className={`text-[10px] px-2 py-0.5 rounded-full ${
                               task.urgency_level === "rojo" ? "bg-red-500/10 text-red-400" :
@@ -357,6 +358,16 @@ export default function TechnicianDashboard() {
                             </span>
                           </div>
                         </CardContent>
+                        {task.requires_evidence && selectedRepair && (
+                          <div className="px-4 pb-4">
+                            <EvidenceUpload
+                              taskId={task.id}
+                              repairId={selectedRepair}
+                              requiresEvidence={task.requires_evidence}
+                              onUploaded={(url) => console.log("Evidence uploaded:", url)}
+                            />
+                          </div>
+                        )}
                       </Card>
                     ))}
                   </div>

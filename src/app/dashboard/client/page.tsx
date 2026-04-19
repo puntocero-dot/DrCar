@@ -25,6 +25,9 @@ export default function ClientDashboard() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
+  const [nextAppointment, setNextAppointment] = useState<{ scheduled_date: string; service_type: string } | null>(null);
+  const [pendingPaymentsTotal, setPendingPaymentsTotal] = useState<number>(0);
+  const [maintenanceAlert, setMaintenanceAlert] = useState<{ make: string; model: string; next_service_date: string; current_mileage: number } | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -35,21 +38,64 @@ export default function ClientDashboard() {
         if (!session) return;
         setUser(session.user);
 
-        // Fetch Rental Reservations
-        const { data: rentalData } = await supabase
-          .from('rental_reservations')
-          .select('*, rental_cars(*)')
-          .eq('user_id', session.user.id)
-          .order('created_at', { ascending: false });
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-        // Fetch Workshop Vehicles
-        const { data: vehicleData } = await supabase
-          .from('vehiculos')
-          .select('*')
-          .eq('client_id', session.user.id);
+        const [
+          rentalResult,
+          vehicleResult,
+          appointmentResult,
+          pendingPaymentsResult,
+          maintenanceResult,
+        ] = await Promise.all([
+          // Fetch Rental Reservations
+          supabase
+            .from('rental_reservations')
+            .select('*, rental_cars(*)')
+            .eq('user_id', session.user.id)
+            .order('created_at', { ascending: false }),
 
-        setRentals(rentalData || []);
-        setVehicles(vehicleData || []);
+          // Fetch Workshop Vehicles
+          supabase
+            .from('vehiculos')
+            .select('*')
+            .eq('client_id', session.user.id),
+
+          // Próxima cita del taller
+          (supabase.from('citas') as any)
+            .select('scheduled_date, service_type')
+            .eq('client_id', session.user.id)
+            .eq('status', 'programada')
+            .gte('scheduled_date', new Date().toISOString())
+            .order('scheduled_date', { ascending: true })
+            .limit(1),
+
+          // Pagos pendientes
+          (supabase.from('rental_reservations') as any)
+            .select('total_price, status')
+            .eq('user_id', session.user.id)
+            .eq('status', 'PENDING_PAYMENT'),
+
+          // Vehículo con mantenimiento próximo
+          (supabase.from('vehiculos') as any)
+            .select('make, model, next_service_date, current_mileage')
+            .eq('client_id', session.user.id)
+            .lt('next_service_date', thirtyDaysFromNow.toISOString())
+            .limit(1),
+        ]);
+
+        setRentals(rentalResult.data || []);
+        setVehicles(vehicleResult.data || []);
+
+        const apptData = appointmentResult.data;
+        setNextAppointment(apptData && apptData.length > 0 ? apptData[0] : null);
+
+        const pendingData: { total_price: number }[] = pendingPaymentsResult.data || [];
+        const total = pendingData.reduce((sum: number, r: { total_price: number }) => sum + (r.total_price || 0), 0);
+        setPendingPaymentsTotal(total);
+
+        const maintData = maintenanceResult.data;
+        setMaintenanceAlert(maintData && maintData.length > 0 ? maintData[0] : null);
       } catch (err) {
         console.error("Dashboard fetch error:", err);
       } finally {
@@ -193,37 +239,43 @@ export default function ClientDashboard() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-steel-400 text-sm">Reserva Próxima</span>
-                  <span className="text-accent-400 font-bold text-sm">Mañana 10:00 AM</span>
+                  <span className="text-accent-400 font-bold text-sm">
+                    {nextAppointment
+                      ? new Date(nextAppointment.scheduled_date).toLocaleDateString('es-SV', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                      : 'Sin citas programadas'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-steel-400 text-sm">Pagos Pendientes</span>
-                  <span className="text-white font-bold text-sm">$0.00</span>
+                  <span className="text-white font-bold text-sm">${pendingPaymentsTotal.toFixed(2)}</span>
                 </div>
               </div>
               <Button variant="outline" className="w-full text-xs">Pagar Facturas Pendientes</Button>
             </CardContent>
           </Card>
 
-          {/* Tips / Promo */}
+          {/* Tips / CTA */}
           <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-6 space-y-4 relative overflow-hidden group">
             <div className="absolute -top-4 -right-4 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
             <h4 className="text-emerald-400 font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5" /> Viaje Seguro
+              <CheckCircle2 className="w-5 h-5" /> Mantén tu vehículo en óptimas condiciones
             </h4>
             <p className="text-zinc-400 text-sm leading-relaxed">
-              ¿Sabías que como cliente de AutoMaster tienes un **10% de descuento** en tu próxima renta de Ready2DriveSV?
+              Agenda tu próximo servicio de mantenimiento preventivo y evita reparaciones costosas.
             </p>
-            <p className="text-xs font-bold text-white">CÓDIGO: MASTER2024</p>
+            <Button variant="outline" size="sm" className="w-full text-xs">Agendar Servicio</Button>
           </div>
 
-          <Card variant="outline" className="border-amber-500/20 bg-amber-500/5">
-             <CardContent className="p-4 flex gap-4 items-start">
-               <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
-               <p className="text-xs text-amber-200/80 leading-relaxed">
-                 Tu vehículo **Toyota Hilux** necesita cambio de aceite en 250 km. ¡Agenda tu cita hoy!
-               </p>
-             </CardContent>
-          </Card>
+          {maintenanceAlert && (
+            <Card variant="outline" className="border-amber-500/20 bg-amber-500/5">
+               <CardContent className="p-4 flex gap-4 items-start">
+                 <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+                 <p className="text-xs text-amber-200/80 leading-relaxed">
+                   Tu vehículo <strong>{maintenanceAlert.make} {maintenanceAlert.model}</strong> tiene mantenimiento próximo programado para el {new Date(maintenanceAlert.next_service_date).toLocaleDateString('es-SV')}. ¡Agenda tu cita hoy!
+                 </p>
+               </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

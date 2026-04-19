@@ -45,6 +45,8 @@ const statusConfig = {
   inactive: { label: 'Inactivo', class: 'bg-red-500/15 text-red-400 border-red-500/30' },
 }
 
+const PAGE_SIZE = 10
+
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>(DEMO_VEHICLES)
   const [search, setSearch] = useState('')
@@ -52,6 +54,7 @@ export default function VehiclesPage() {
   const [showModal, setShowModal] = useState(false)
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
   const [isViewOnly, setIsViewOnly] = useState(false)
+  const [page, setPage] = useState(0)
 
   const filtered = vehicles.filter((v) => {
     const matchSearch =
@@ -62,6 +65,9 @@ export default function VehiclesPage() {
     const matchStatus = statusFilter === 'all' || v.status === statusFilter
     return matchSearch && matchStatus
   })
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const handleSave = (vehicleData: Partial<Vehicle>) => {
     if (selectedVehicle) {
@@ -179,7 +185,7 @@ export default function VehiclesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((vehicle) => (
+              {paginated.map((vehicle) => (
                 <tr key={vehicle.id} className="border-b border-steel-800/50 hover:bg-navy-800/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
@@ -241,13 +247,21 @@ export default function VehiclesPage() {
         )}
         {/* Pagination */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-steel-800">
-          <p className="text-steel-500 text-sm">Mostrando {filtered.length} de {vehicles.length} vehículos</p>
+          <p className="text-steel-500 text-sm">Mostrando {paginated.length} de {filtered.length} vehículos</p>
           <div className="flex items-center gap-2">
-            <button className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors" disabled>
+            <button
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 0}
+              className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-white text-sm px-3 py-1 bg-accent-500/20 rounded-lg">1</span>
-            <button className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors" disabled>
+            <span className="text-steel-400 text-sm px-3 py-1">Página {page + 1} de {Math.max(totalPages, 1)}</span>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= totalPages - 1}
+              className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>

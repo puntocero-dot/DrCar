@@ -54,6 +54,8 @@ const priorityConfig: Record<string, { label: string; class: string }> = {
   high: { label: 'Alta', class: 'text-red-400' },
 }
 
+const PAGE_SIZE = 10
+
 export default function RepairsPage() {
   const [repairs, setRepairs] = useState<Repair[]>(DEMO_REPAIRS)
   const [search, setSearch] = useState('')
@@ -61,6 +63,7 @@ export default function RepairsPage() {
   const [showModal, setShowModal] = useState(false)
   const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null)
   const [isViewOnly, setIsViewOnly] = useState(false)
+  const [page, setPage] = useState(0)
 
   const filtered = repairs.filter((r) => {
     const matchSearch =
@@ -71,6 +74,9 @@ export default function RepairsPage() {
     const matchStatus = statusFilter === 'all' || r.status === statusFilter
     return matchSearch && matchStatus
   })
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const handleSave = (repairData: Partial<Repair>) => {
     if (selectedRepair) {
@@ -166,7 +172,7 @@ export default function RepairsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((repair) => (
+              {paginated.map((repair) => (
                 <tr key={repair.id} className="border-b border-steel-800/50 hover:bg-navy-800/50 transition-colors">
                   <td className="px-6 py-4">
                     <span className="text-accent-400 font-mono text-sm font-medium">{repair.id}</span>
@@ -220,13 +226,21 @@ export default function RepairsPage() {
           </div>
         )}
         <div className="flex items-center justify-between px-6 py-4 border-t border-steel-800">
-          <p className="text-steel-500 text-sm">Mostrando {filtered.length} de {repairs.length} reparaciones</p>
+          <p className="text-steel-500 text-sm">Mostrando {paginated.length} de {filtered.length} reparaciones</p>
           <div className="flex items-center gap-2">
-            <button className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors" disabled>
+            <button
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 0}
+              className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-white text-sm px-3 py-1 bg-accent-500/20 rounded-lg">1</span>
-            <button className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors" disabled>
+            <span className="text-steel-400 text-sm px-3 py-1">Página {page + 1} de {Math.max(totalPages, 1)}</span>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page >= totalPages - 1}
+              className="p-2 text-steel-400 hover:text-white hover:bg-navy-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
