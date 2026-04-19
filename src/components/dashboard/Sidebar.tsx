@@ -20,7 +20,9 @@ import {
   LogOut,
   Menu,
   X,
+  Paintbrush,
 } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils/cn'
 
 interface SidebarLink {
@@ -41,12 +43,14 @@ const superadminLinks: SidebarLink[] = [
   { href: '/dashboard/superadmin/budgets', label: 'Presupuestos', icon: <FileText className="w-5 h-5" /> },
   { href: '/dashboard/superadmin/permissions', label: 'Permisos', icon: <Shield className="w-5 h-5" /> },
   { href: '/dashboard/superadmin/settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
+  { href: '/dashboard/paint-sessions', label: 'Taller de Pintura', icon: <Paintbrush className="w-5 h-5 text-yellow-400" /> },
 ]
 
 const technicianLinks: SidebarLink[] = [
   { href: '/dashboard/technician', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { href: '/dashboard/superadmin/repairs', label: 'Mis Reparaciones', icon: <Wrench className="w-5 h-5" /> },
   { href: '/dashboard/superadmin/appointments', label: 'Agenda Citas', icon: <Calendar className="w-5 h-5" /> },
+  { href: '/dashboard/paint-sessions', label: 'Taller de Pintura', icon: <Paintbrush className="w-5 h-5 text-yellow-400" /> },
   { href: '/dashboard/technician/settings', label: 'Configuración', icon: <Settings className="w-5 h-5" /> },
 ]
 
@@ -93,8 +97,10 @@ export default function Sidebar({ userRole = 'superadmin', userName = 'Admin' }:
 
   const links = getLinks()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     clearDemoUser()
+    const supabase = createClient()
+    await supabase.auth.signOut()
     router.push('/login')
   }
 
