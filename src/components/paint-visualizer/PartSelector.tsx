@@ -1,22 +1,6 @@
 'use client'
 
-import { PAINTABLE_PARTS, type PaintablePart } from '@/lib/paint/ferrari-parts'
-
-const PART_LABELS: Record<PaintablePart, string> = {
-  body: 'Carrocería',
-  wheels: 'Rines',
-  roof: 'Techo',
-  bumper_front: 'Bumper Front.',
-  bumper_rear: 'Bumper Tras.',
-}
-
-const PART_ICONS: Record<PaintablePart, string> = {
-  body: '🚗',
-  wheels: '⚙️',
-  roof: '🏠',
-  bumper_front: '⬆️',
-  bumper_rear: '⬇️',
-}
+import { PAINTABLE_PARTS, PART_LABELS, PART_ICONS, type PaintablePart } from '@/lib/paint/ferrari-parts'
 
 interface PartSelectorProps {
   selectedPart: PaintablePart | null
