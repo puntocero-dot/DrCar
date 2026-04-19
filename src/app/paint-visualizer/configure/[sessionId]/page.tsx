@@ -27,9 +27,8 @@ const CarViewer = dynamic(() => import('@/components/paint-visualizer/CarViewer'
 const INITIAL_CONFIG: PaintConfig = {
   body: { ...DEFAULT_PART_CONFIGS.body },
   wheels: { ...DEFAULT_PART_CONFIGS.wheels },
-  roof: { ...DEFAULT_PART_CONFIGS.roof },
   bumper_front: { ...DEFAULT_PART_CONFIGS.bumper_front },
-  bumper_rear: { ...DEFAULT_PART_CONFIGS.bumper_rear },
+  trim: { ...DEFAULT_PART_CONFIGS.trim },
 }
 
 export default function ConfigurePage({ params }: { params: { sessionId: string } }) {

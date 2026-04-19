@@ -202,11 +202,9 @@ export interface PartPaintConfig {
 
 export interface PaintConfig {
   body?: PartPaintConfig
-  doors?: PartPaintConfig
-  roof?: PartPaintConfig
   wheels?: PartPaintConfig
   bumper_front?: PartPaintConfig
-  bumper_rear?: PartPaintConfig
+  trim?: PartPaintConfig
 }
 
 export interface PaintSession {
