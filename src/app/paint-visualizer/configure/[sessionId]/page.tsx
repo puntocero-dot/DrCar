@@ -87,7 +87,7 @@ export default function ConfigurePage({ params }: { params: { sessionId: string 
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+    <div className="h-screen bg-gray-950 text-white flex flex-col overflow-hidden">
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm h-14 flex items-center px-4 gap-3 flex-shrink-0">
         <div className="w-7 h-7 rounded-lg bg-yellow-400 flex items-center justify-center">
