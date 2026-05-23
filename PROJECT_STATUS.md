@@ -26,7 +26,8 @@
 | **Formularios** | react-hook-form + zod + @hookform/resolvers | — |
 | **Fechas** | date-fns | ^3.3.1 |
 | **Auth (preparado)** | @supabase/supabase-js, @supabase/auth-helpers-nextjs | — |
-| **DB (pendiente)** | PostgreSQL (Railway o Supabase) | — |
+| **DB** | PostgreSQL (Supabase) + Prisma | — |
+| **Hosting** | Vercel | — |
 
 ---
 
@@ -388,7 +389,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
 > Actualmente con **valores placeholder** → el sistema detecta esto y activa modo demo.
-> Para conectar backend real, reemplazar con credenciales de Railway PostgreSQL + configurar Prisma (ver sección 12).
+> Para conectar backend real, reemplazar con credenciales de Supabase + configurar Prisma (ver sección 12).
 
 ---
 
@@ -412,12 +413,11 @@ npm run dev
 
 ### 🔴 Prioridad Alta
 
-#### 12.1 Conectar Backend Real (Railway PostgreSQL)
-- [ ] Crear servicio PostgreSQL en Railway
-- [ ] Obtener `DATABASE_URL` de Railway
-- [ ] Instalar Prisma: `npm install prisma @prisma/client`
-- [ ] Crear `prisma/schema.prisma` basado en `001_initial_schema.sql`
-- [ ] Migrar de Supabase client a Prisma ORM
+#### 12.1 Conectar Backend Real (Supabase PostgreSQL + Prisma)
+- [ ] Obtener `DATABASE_URL` del pooler de Supabase (puerto 6543, `?pgbouncer=true`)
+- [ ] Verificar `prisma/schema.prisma` alineado a `001_initial_schema.sql`
+- [ ] Ejecutar `prisma migrate deploy` en Supabase
+- [ ] Migrar de cliente Supabase directo a Prisma ORM donde aplique
 - [ ] Implementar NextAuth.js para autenticación (reemplazar demo auth)
 - [ ] Crear API routes en `src/app/api/` para cada módulo
 - [ ] Seed de datos iniciales (usuarios, permisos, config)
@@ -469,8 +469,9 @@ Actualmente **todas las páginas usan datos hardcodeados** en arrays constantes.
 - [ ] **Chatbot:** Asistente para clientes
 
 #### 12.7 Infraestructura
-- [ ] Deploy a Vercel (frontend) + Railway (DB)
-- [ ] CI/CD pipeline
+- [ ] Deploy a Vercel (frontend + API routes) — DB en Supabase
+- [ ] Configurar env vars en Vercel dashboard
+- [ ] CI/CD pipeline (GitHub → Vercel preview/prod)
 - [ ] Tests unitarios y E2E
 - [ ] Monitoreo y logging
 - [ ] Rate limiting en API
@@ -493,14 +494,14 @@ Actualmente **todas las páginas usan datos hardcodeados** en arrays constantes.
 
 7. **No se usa Recharts en subpáginas:** Solo el dashboard principal usa Recharts. Las subpáginas usan barras de progreso CSS custom para gráficas simples.
 
-8. **Railway como backend recomendado:** El usuario tiene cuenta pagada de Railway. La migración debería usar Railway PostgreSQL + Prisma ORM + NextAuth.js.
+8. **Vercel + Supabase como stack productivo:** El hosting es Vercel (frontend + API routes serverless) y la DB es PostgreSQL gestionado por Supabase. Conectar Prisma vía el pooler (`pgbouncer`) en serverless.
 
 ---
 
 ## 14. Notas para Continuación
 
 - **NO borrar** los datos demo de las páginas hasta que el backend esté conectado. Sirven como referencia de la estructura de datos esperada.
-- **El schema SQL fue diseñado para Supabase** (usa `auth.users` como FK en profiles). Si se migra a Railway + Prisma, ajustar la tabla `profiles` para no depender de `auth.users`.
+- **El schema SQL fue diseñado para Supabase** (usa `auth.users` como FK en profiles). Mantener esa dependencia ya que la DB seguirá en Supabase.
 - **El sidebar actualmente solo muestra links de SuperAdmin.** Al crear dashboards de otros roles, el sidebar debe recibir el rol y mostrar links correspondientes.
 - **Los formularios tienen campos visuales pero no validan ni envían.** Al conectar backend, usar `react-hook-form` + `zod` (ya instalados) para validación.
 - **Las tablas no tienen paginación real.** Implementar paginación server-side cuando se conecte la DB.
