@@ -74,8 +74,8 @@ Migración: columna `status` se amplía y se mapea; las OT históricas conservan
 - `client_links`: token aleatorio de 256 bits, **solo se guarda el hash**, alcance (`quote_approval`, `progress`, `payment`), expiración, revocación. Evolución del patrón de `paint_sessions.access_token`.
 - Envío por **WhatsApp** (Cloud API con plantilla *utility*; mientras tanto fallback `wa.me` como hoy) y **SMS/correo**. Ruta pública `/o/[token]`, responsiva, sin login.
 - El cliente ve: resumen de hallazgos con fotos, líneas MO/repuestos, total, y puede **aprobar todo, aprobar por línea (parcial) o rechazar** con comentario.
-- **Firma de aceptación con validez de registro**: dibujo de firma + nombre + documento + **OTP de 6 dígitos al teléfono registrado** (segundo factor) + registro **server-side** de `signed_at` (UTC), IP (`x-forwarded-for`), user-agent, hash SHA-256 del snapshot de la cotización (líneas, precios, totales, versión), texto legal aceptado y versión del texto. Se emite PDF de constancia con el hash.
-- ⚠️ Validez legal: una firma electrónica simple + evidencia técnica suele ser admisible, pero **debe validarse con asesor legal local** (p. ej. Ley de Firma Electrónica de El Salvador si operan allí) y definir texto de términos, privacidad y retención.
+- **Firma de aceptación con validez de registro**: dibujo de firma + nombre + documento + **OTP de 6 dígitos al teléfono registrado (+503)** (segundo factor) + registro **server-side** de `signed_at` (UTC), IP (`x-forwarded-for`), user-agent, hash SHA-256 del snapshot de la cotización (líneas, precios, totales, versión), texto legal aceptado y versión del texto. Se emite PDF de constancia con el hash.
+- ⚠️ Validez legal: una firma electrónica simple + evidencia técnica suele ser admisible, pero **debe validarse con asesor legal local** (Ley de Firma Electrónica de El Salvador y normativa de protección de datos personales vigente) y definir texto de términos, privacidad y retención.
 
 ### 2.4 Taller, inventario y trazabilidad
 - **Catálogo y stock** (`parts`, `stock_levels`, `stock_movements`): ledger de movimientos (`receive`, `reserve`, `release`, `consume`, `return`, `adjust`); el saldo se deriva y se cachea en `stock_levels`.
@@ -119,8 +119,9 @@ El `UPDATE` directo sobre `status` se restringe además por RLS a una RPC `trans
 
 ### 2.6 Facturación y cobro
 - Al pasar a `listo_entrega`, el sistema **pre-genera la factura** desde la cotización aprobada + extras autorizados (`invoices`).
-- **Adaptador contable** (`AccountingProvider`): `createInvoice`, `voidInvoice`, `getStatus`, `syncCustomer`, `syncItems`. Implementaciones: **Siigo** (REST, OAuth/token) y otras (Alegra, QuickBooks, Odoo). **Validar cobertura por país**: para El Salvador la factura electrónica es el **DTE del Ministerio de Hacienda** (directo o vía proveedor certificado); Siigo aplica donde opera localmente (p. ej. Colombia). El adaptador permite empezar por un proveedor y sumar otros sin tocar el dominio.
-- **Pasarelas** (`PaymentProvider`): `createCheckout`, `verifyWebhook`, `refund`. Candidatas: Wompi / PagaditoSV / Stripe / PayPal según país. Link de pago en el mismo portal `/o/[token]` + pago en mostrador (efectivo/POS) registrado manualmente. Webhooks **idempotentes** (`integration_events.idempotency_key`) y conciliación periódica.
+- **Contexto El Salvador (decisión confirmada)**: la facturación electrónica es el **DTE del Ministerio de Hacienda**. Moneda USD, **IVA 13 %**. Tipos de DTE previstos (validar catálogo vigente con el contador): Factura (consumidor final), Comprobante de Crédito Fiscal (clientes contribuyentes, requiere NIT/NRC), Nota de Crédito (anulaciones/devoluciones). El `invoices` guarda `tipo_dte`, `codigo_generacion` (UUID), `numero_control`, `sello_recepcion` (respuesta de Hacienda), JSON firmado y PDF; se requiere **modo contingencia** (emitir sin conexión y transmitir después) y los datos fiscales del cliente (DUI/NIT/NRC, giro, dirección) en `profiles`.
+- **Adaptador contable** (`AccountingProvider`): `createInvoice`, `voidInvoice`, `getStatus`, `syncCustomer`, `syncItems`. Prioridad: (1) **emisor DTE directo o proveedor certificado** (firma con certificado del contribuyente y transmisión a Hacienda); (2) ERP con soporte DTE en El Salvador si el taller ya usa uno. **Siigo** se mantiene como opción solo si confirman cobertura DTE local; el adaptador evita acoplarse.
+- **Pasarelas** (`PaymentProvider`): `createCheckout`, `verifyWebhook`, `refund`. Candidatas para El Salvador (validar disponibilidad y comisiones): **Wompi**, **Pagadito**, Stripe/PayPal para tarjetas internacionales; más transferencia/efectivo/POS en mostrador. Link de pago en el mismo portal `/o/[token]` + pago en mostrador (efectivo/POS) registrado manualmente. Webhooks **idempotentes** (`integration_events.idempotency_key`) y conciliación periódica.
 - Entrega bloqueada hasta pago o crédito aprobado por rol autorizado (regla configurable).
 
 ### 2.7 Tablero Kanban y métricas
@@ -309,8 +310,8 @@ Server Actions/Route Handlers delgados → servicios de dominio → RPC SQL para
 | Mensajería | `MessagingProvider`: **WhatsApp Business Cloud API (Meta)** con plantillas aprobadas (utilidad), SMS (Twilio/Infobip o proveedor local), correo (**Resend**, ya presente) | WhatsApp requiere opt-in y plantillas |
 | OTP | Código de 6 dígitos, TTL 5 min, hash en BD, límite de intentos | Segundo factor de la firma remota |
 | PDF de actas/constancias | Generación server-side (`@react-pdf/renderer` o Playwright) + hash guardado | Evidencia descargable |
-| Facturación | `AccountingProvider` → **Siigo**, Alegra, QuickBooks, Odoo; **DTE (Hacienda SV)** si aplica | Validar según país de operación |
-| Pagos | `PaymentProvider` → Wompi / Stripe / PayPal / POS | Según país y comisión |
+| Facturación | `AccountingProvider` → **DTE Hacienda El Salvador** (emisor directo o proveedor certificado); ERP con DTE como alternativa (Siigo solo si confirma cobertura) | Obligación fiscal local |
+| Pagos | `PaymentProvider` → Wompi / Pagadito / Stripe / POS | Opciones disponibles en El Salvador |
 | Observabilidad | Sentry + logs estructurados + panel de `integration_events` fallidos | Operar integraciones |
 | Seguridad/privacidad | Hash de tokens, rate limiting (Upstash/Vercel), CSP existente, RLS por rol, `audit_log`, política de retención de fotos/firmas, consentimiento y aviso de privacidad | Datos personales + evidencia legal |
 
@@ -362,9 +363,14 @@ Job de conciliación nocturno compara invoices/payments vs. proveedor
 
 ---
 
-## 7. Decisiones abiertas (necesito confirmación para pasar a diseño detallado)
-1. **País/fiscalidad** de operación (define DTE vs. Siigo vs. otro ERP y pasarela).
-2. **Reserva vs. consumo** de stock: ¿se acepta reservar al aprobar y consumir al instalar (recomendado)?
-3. **Quién puede firmar el QC**: ¿solo el técnico asignado o también un jefe de taller?
-4. **Pago previo a entrega**: ¿obligatorio, o se permite crédito con autorización?
-5. **WhatsApp**: ¿cuenta Business ya verificada o arrancamos con enlace `wa.me` + SMS?
+## 7. Decisiones
+
+**Confirmadas**
+1. ✅ **País: El Salvador** → facturación DTE (Hacienda), IVA 13 %, USD, teléfonos +503, pasarelas locales (§2.6, §5.2).
+2. ✅ **Stock: reservar al aprobar, consumir al instalar** (§2.4, historia I-1).
+
+**Abiertas** (hay un valor por defecto propuesto; se aplicará si no se indica otra cosa)
+3. Quién firma el QC → *por defecto*: técnico asignado **o** jefe de taller.
+4. Pago previo a entrega → *por defecto*: obligatorio, con excepción de crédito autorizado por rol facultado y registrado.
+5. WhatsApp → *por defecto*: arrancar con enlace `wa.me` + SMS/correo y migrar a Cloud API cuando la cuenta Business esté verificada.
+6. ¿El taller ya emite DTE con algún sistema/proveedor? Define si el adaptador inicial es emisor directo o integración con el existente.
